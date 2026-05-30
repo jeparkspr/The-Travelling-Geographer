@@ -1,0 +1,228 @@
+TRAVELLING GEOGRAPHER - BACKEND STRUCTURE SUMMARY
+================================================
+
+All backend files have been successfully created for the FastAPI travel destination wishlist/journal app.
+
+PROJECT STRUCTURE:
+==================
+
+backend/
+├── alembic/
+│   ├── __init__.py
+│   ├── env.py                          # Alembic async environment
+│   ├── script.py.mako                  # Alembic migration template
+│   └── versions/
+│       ├── __init__.py
+│       ├── 001_initial.py              # Initial schema migration
+│       ├── 002_add_cover_media_id.py   # Cover image support
+│       ├── 003_rename_noted_to_suggested.py  # Status rename
+│       ├── 004_add_app_settings.py     # AI settings table
+│       └── 005_titlecase_seasons.py    # Title-case season values
+├── app/
+│   ├── __init__.py
+│   ├── config.py                       # Pydantic-settings configuration
+│   ├── database.py                     # SQLAlchemy async setup
+│   ├── main.py                         # FastAPI app with routers & middleware
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── destination.py              # Destination & Link models
+│   │   ├── media.py                    # Media model
+│   │   ├── journal.py                  # JournalEntry model
+│   │   ├── custom_field.py             # CustomFieldDefinition model
+│   │   └── app_settings.py            # AppSetting model + default AI prompt
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── destination.py              # Destination, Link, DestinationClip schemas
+│   │   ├── media.py                    # MediaRead schema
+│   │   ├── journal.py                  # JournalEntry schemas
+│   │   └── custom_field.py             # CustomField schemas
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── geocoding.py                # Nominatim geocoding service
+│   │   └── image_fetcher.py            # Image fetching from URLs
+│   └── routers/
+│       ├── __init__.py
+│       ├── destinations.py             # Full CRUD + links + clips + cover image
+│       ├── media.py                    # Media upload/download + URL upload
+│       ├── journal.py                  # Journal entry CRUD with inline media
+│       ├── custom_fields.py            # Custom field definitions
+│       ├── geocoding.py                # Geocoding proxy endpoints
+│       ├── search.py                   # Full-text search
+│       ├── tags.py                     # Tags, backup/restore, CSV export
+│       └── ai.py                       # Gemini AI integration
+├── tests/
+│   └── test_backup_restore.py          # Backup/restore test scenarios
+├── alembic.ini                         # Alembic configuration
+├── requirements.txt                    # Python dependencies
+├── .gitignore
+├── .env.example
+├── Dockerfile
+└── README.md
+
+frontend/
+├── src/
+│   ├── views/
+│   │   ├── DestinationList.vue         # List view with filtering
+│   │   ├── DestinationDetail.vue       # Detail view with tabs
+│   │   ├── DestinationForm.vue         # Create/edit form with AI populate
+│   │   ├── MapView.vue                 # Interactive map view
+│   │   └── Settings.vue                # Settings with tabs (General, Custom Fields, Tags, Backup & Restore, AI, Bookmarklet)
+│   ├── components/
+│   │   ├── MapComponent.vue            # Leaflet map component
+│   │   ├── FilterSidebar.vue           # Filter panel for list/map views
+│   │   ├── RichTextEditor.vue          # TipTap rich text editor
+│   │   └── LinkManager.vue             # Link management component
+│   ├── composables/
+│   │   ├── useApi.js                   # Axios API client with all endpoints
+│   │   └── useGeocoding.js             # Geocoding composable
+│   ├── stores/
+│   │   ├── destinations.js             # Pinia destinations store
+│   │   ├── customFields.js             # Pinia custom fields store
+│   │   └── settings.js                 # Pinia settings store
+│   ├── router/
+│   │   └── index.js                    # Vue Router configuration
+│   ├── App.vue                         # Root component
+│   └── main.js                         # App entry point
+├── public/
+├── package.json
+├── vite.config.js
+└── index.html
+
+docker-compose.yml                      # Multi-service orchestration
+Dockerfile                              # Combined frontend build + backend
+
+KEY FEATURES IMPLEMENTED:
+=========================
+
+MODELS:
+-------
+✓ Destination: UUID PK, full location data, custom fields (JSONB), cover image
+✓ Link: Referenced URLs with metadata
+✓ Media: File management with FK to destinations/journal_entries
+✓ JournalEntry: Travel journal with dates and ratings
+✓ CustomFieldDefinition: User-defined extensible fields
+✓ AppSetting: Key-value settings for AI config and prompt template
+
+INDEXES & PERFORMANCE:
+---------------------
+✓ GIN index on tags array
+✓ Full-text search tsvector index (GIN)
+✓ GIST index on PostGIS location geometry
+✓ Standard B-tree indexes on status, country, region, city, priority
+
+API ENDPOINTS (55+):
+-------------------
+Destinations (16):
+  - List with 10+ filters (status, country, tags, search, bbox, etc.)
+  - CRUD operations
+  - Link management (add/update/delete)
+  - Fetch preview images from links
+  - Bookmarklet clip creation
+  - Set cover image
+
+Media (5):
+  - Upload multiple files with thumbnail generation
+  - Upload from URL
+  - List by destination
+  - Delete with cleanup
+  - Set cover image
+
+Journal (5):
+  - CRUD operations
+  - Inline media upload support
+  - Date-based filtering
+
+Custom Fields (4):
+  - CRUD for field definitions
+  - Cleanup on deletion
+
+Geocoding (2):
+  - Forward geocoding (address -> coords)
+  - Reverse geocoding (coords -> address)
+
+Search (1):
+  - Full-text search across destinations + journal
+
+Admin (8):
+  - Tag aggregation with counts
+  - Tag rename/merge
+  - Filter options (unique countries/regions)
+  - Unified backup via SSE (data + media → .tgz)
+  - Backup download
+  - Restore upload + SSE progress
+  - CSV export
+
+AI (4):
+  - Get/update AI settings
+  - Test Gemini connection
+  - AI populate destination from coordinates
+
+FRONTEND FEATURES:
+------------------
+✓ Vue 3 with Composition API (<script setup>)
+✓ PrimeVue 4 (Aura dark theme) UI components
+✓ Leaflet interactive maps
+✓ TipTap rich text editor for descriptions
+✓ AI-powered destination population via Google Gemini
+✓ Unified backup/restore with SSE progress bars
+✓ CSV export of destinations
+✓ Web clipper bookmarklet
+✓ Custom fields management
+✓ Tag management with rename/merge
+✓ Media management with URL upload and cover image selection
+✓ Journal entries with ratings
+
+ASYNC FEATURES:
+---------------
+✓ All endpoints use async/await
+✓ AsyncSession for database operations
+✓ Async httpx for external API calls (Nominatim, Gemini)
+✓ Async image processing with Pillow
+✓ Server-Sent Events for backup/restore progress
+✓ Proper transaction handling
+
+SERVICES:
+---------
+✓ Geocoding: Nominatim API integration with error handling
+✓ Image Fetcher: og:image extraction, fallback to img tags
+✓ AI: Google Gemini (gemini-2.5-flash) for destination info generation
+
+DATABASE:
+---------
+✓ PostgreSQL 16 + PostGIS for spatial queries
+✓ UUID primary keys with gen_random_uuid()
+✓ Async connections via asyncpg
+✓ Alembic migrations (5 migration files)
+✓ Timezone-aware timestamps
+✓ 6 tables: destinations, links, journal_entries, media, custom_field_definitions, app_settings
+
+CONFIGURATION:
+--------------
+✓ Environment-based settings via pydantic-settings
+✓ Configurable DATABASE_URL
+✓ Configurable MEDIA_DIR
+✓ Nominatim endpoint override
+✓ Adjustable max upload size
+✓ Adjustable thumbnail dimensions
+
+RUNNING THE APPLICATION:
+========================
+
+Docker (recommended):
+  docker compose up -d
+  # App available at http://localhost:8080
+  # Migrations run automatically on startup
+
+Development:
+  # Backend
+  cd backend
+  python -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+  alembic upgrade head
+  uvicorn app.main:app --reload
+
+  # Frontend
+  cd frontend
+  npm install
+  npm run dev

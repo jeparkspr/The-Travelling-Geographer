@@ -1,0 +1,12 @@
+node_modules
+__pycache__
+*.pyc
+.git
+.env
+*.egg-info
+dist
+build
+.vite
+frontend/node_modules
+backend/__pycache__
+media/*

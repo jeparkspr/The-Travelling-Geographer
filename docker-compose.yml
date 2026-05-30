@@ -1,0 +1,99 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: tg-db
+    environment:
+      POSTGRES_DB: travelling_geographer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d travelling_geographer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    image: travelling-geographer-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_TRACESTRACK_KEY: ${TRACESTRACK_KEY:-}
+    container_name: tg-app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/travelling_geographer
+      MEDIA_DIR: /app/media
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-CHANGE-ME-in-production}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: travelling-geographer-nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: tg-nginx
+    hostname: travel
+    environment:
+      TLS_MODE: ${TLS_MODE:-self-signed}
+      DOMAIN: ${DOMAIN:-localhost}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-}
+    volumes:
+      - ssl_certs:/etc/nginx/ssl
+      - certbot_data:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    networks:
+      default:
+      lan:
+        ipv4_address: ${TTG_IP:-10.0.0.155}
+    sysctls:
+      - net.ipv4.icmp_echo_ignore_all=0
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tg-tailscale
+    hostname: ${TS_HOSTNAME:-travel}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?Set TS_AUTHKEY in .env (generate at https://login.tailscale.com/admin/settings/keys)}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: true
+    volumes:
+      - tailscale_state:/var/lib/tailscale
+      - ./tailscale:/config:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    profiles:
+      - tailscale
+
+networks:
+  default:
+    # Internal network for db ↔ app ↔ nginx communication
+  lan:
+    driver: macvlan
+    driver_opts:
+      parent: ${LAN_INTERFACE:-eno1}
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+          gateway: 10.0.0.1
+          ip_range: 10.0.0.155/32
+
+volumes:
+  db_data:
+  media_data:
+  ssl_certs:
+  certbot_data:
+  certbot_www:
+  tailscale_state:
