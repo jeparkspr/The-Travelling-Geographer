@@ -4,6 +4,10 @@ All notable changes to The Travelling Geographer.
 
 ---
 
+## 2026.06.16.2
+
+- Remove obsolete Docker nginx folder; nginx now runs on host
+
 ## 2026.06.16.1
 
 - Move nginx from Docker container to host reverse proxy
