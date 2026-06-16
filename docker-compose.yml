@@ -27,36 +27,13 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/travelling_geographer
       MEDIA_DIR: /app/media
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-CHANGE-ME-in-production}
+    ports:
+      - "127.0.0.1:8000:8000"
     volumes:
       - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
-    restart: unless-stopped
-
-  nginx:
-    image: travelling-geographer-nginx
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: tg-nginx
-    hostname: travel
-    environment:
-      TLS_MODE: ${TLS_MODE:-self-signed}
-      DOMAIN: ${DOMAIN:-localhost}
-      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-}
-    volumes:
-      - ssl_certs:/etc/nginx/ssl
-      - certbot_data:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-    networks:
-      default:
-      lan:
-        ipv4_address: ${TTG_IP:-10.0.0.155}
-    sysctls:
-      - net.ipv4.icmp_echo_ignore_all=0
-    depends_on:
-      - app
     restart: unless-stopped
 
   tailscale:
@@ -77,23 +54,7 @@ services:
     profiles:
       - tailscale
 
-networks:
-  default:
-    # Internal network for db ↔ app ↔ nginx communication
-  lan:
-    driver: macvlan
-    driver_opts:
-      parent: ${LAN_INTERFACE:-eno1}
-    ipam:
-      config:
-        - subnet: 10.0.0.0/24
-          gateway: 10.0.0.1
-          ip_range: 10.0.0.155/32
-
 volumes:
   db_data:
   media_data:
-  ssl_certs:
-  certbot_data:
-  certbot_www:
   tailscale_state:
