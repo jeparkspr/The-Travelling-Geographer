@@ -34,6 +34,7 @@ ssh -q boss@10.0.0.154 << EOF
   echo -e "${INFOC}    $(date +"%I:%M:%S") - REBUILDING CONTAINERS ON APPS.LOCAL                              ${NC}"
   echo -e "${INFOC}                                                                                ${NC}"
   echo -e "                                                                                ${NC}"
+  cd /home/apps/ttg/The-Travelling-Geographer
   docker compose up -d --build --quiet-build
   docker compose --profile tailscale up -d
 EOF
