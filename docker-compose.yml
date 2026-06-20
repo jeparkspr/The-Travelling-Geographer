@@ -36,25 +36,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tg-tailscale
-    hostname: ${TS_HOSTNAME:-travel}
-    environment:
-      TS_AUTHKEY: ${TS_AUTHKEY:?Set TS_AUTHKEY in .env (generate at https://login.tailscale.com/admin/settings/keys)}
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_USERSPACE: true
-    volumes:
-      - tailscale_state:/var/lib/tailscale
-      - ./tailscale:/config:ro
-    depends_on:
-      - app
-    restart: unless-stopped
-    profiles:
-      - tailscale
-
 volumes:
   db_data:
   media_data:
-  tailscale_state:

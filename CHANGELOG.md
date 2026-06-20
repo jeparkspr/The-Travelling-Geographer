@@ -4,6 +4,10 @@ All notable changes to The Travelling Geographer.
 
 ---
 
+## 2026.06.20.1
+
+- Remove Tailscale sidecar container and config
+
 ## 2026.06.16.2
 
 - Remove obsolete Docker nginx folder; nginx now runs on host
